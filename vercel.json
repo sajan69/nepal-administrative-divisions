@@ -1,5 +1,19 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/app.py" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": { 
+        "runtime": "python3.9",
+        "buildCommand": "bash build.sh"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/app.py"
+    }
   ]
 }
