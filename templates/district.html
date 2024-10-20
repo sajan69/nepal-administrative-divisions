@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ district|title }} - Municipalities{% endblock %}
+
+{% block header %}Municipalities in {{ district|title }}, {{ province|title }}{% endblock %}
+
+{% block content %}
+    <ul>
+        {% for municipality in municipalities %}
+            <li>{{ municipality|title }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('province_page', province=province) }}" class="back-link">Back to {{ province|title }}</a>
+    <a href="{{ url_for('home') }}" class="back-link">Back to Provinces</a>
+{% endblock %}

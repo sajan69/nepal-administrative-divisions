@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Provinces of Nepal{% endblock %}
+
+{% block header %}Provinces of Nepal{% endblock %}
+
+{% block content %}
+    <ul>
+        {% for province in provinces %}
+            <li><a href="{{ url_for('province_page', province=province) }}">{{ province|title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

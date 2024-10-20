@@ -1,0 +1,46 @@
+# Flask-specific files
+instance/
+.webassets-cache
+
+# Virtual environment
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Flask environment variables
+.env
+.flaskenv
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+node_modules/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Backup files
+*.bak
+*.swp
+*~

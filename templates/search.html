@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Search Nepal Administrative Divisions{% endblock %}
+
+{% block header %}Search Location{% endblock %}
+
+{% block content %}
+    <div class="search-container">
+        <form action="{{ url_for('search') }}" method="get" class="search-form">
+            <div class="search-input-group">
+                <input type="text" id="search-input" name="q" value="{{ query }}" placeholder="Enter province, district, or municipality" class="search-input" autocomplete="off">
+                <div id="autocomplete-results" class="autocomplete-results"></div>
+            </div>
+            <button type="submit" class="search-button">Search</button>
+        </form>
+    </div>
+
+    {% if query %}
+        <h2 class="search-results-header">Results for "{{ query }}"</h2>
+    {% endif %}
+    
+    {% if results %}
+        <div class="search-results">
+            {% for name, data in results.items() %}
+                <div class="result-item">
+                    <h3 class="result-name">{{ name|title }}</h3>
+                    {% if data.type == 'province' %}
+                        <p>Province with {{ data.district_count }} districts</p>
+                        <select class="district-select" onchange="showMunicipalities(this, '{{ name }}')">
+                            <option value="">Select a district</option>
+                            {% for district in data.districts %}
+                                <option value="{{ district }}">{{ district|title }}</option>
+                            {% endfor %}
+                        </select>
+                        {% for district, district_data in data.districts.items() %}
+                            <div class="municipality-list" id="{{ name|replace(' ', '_') }}_{{ district|replace(' ', '_') }}" style="display: none;">
+                                <h4>Municipalities in {{ district|title }}</h4>
+                                <ul>
+                                    {% for municipality in district_data.municipalities %}
+                                        <li>{{ municipality|title }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    {% elif data.type == 'district' %}
+                        <p>District in {{ data.province|title }} province</p>
+                        <p>Contains {{ data.municipality_count }} municipalities:</p>
+                        <ul>
+                            {% for municipality in data.municipalities %}
+                                <li>{{ municipality|title }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% elif data.type == 'municipality' %}
+                        <p>Municipality in {{ data.district|title }} district, {{ data.province|title }} province</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% elif query %}
+        <p class="no-results">No results found for "{{ query }}". Please try a different search term.</p>
+    {% endif %}
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const autocompleteResults = document.getElementById('autocomplete-results');
+        const allData = {{ all_data|tojson|safe }};
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const results = [];
+
+            if (query.length > 1) {
+                for (const province in allData.provinces) {
+                    if (province.toLowerCase().includes(query)) {
+                        results.push({ type: 'province', name: province });
+                    }
+                    for (const district in allData.provinces[province].districts) {
+                        if (district.toLowerCase().includes(query)) {
+                            results.push({ type: 'district', name: district, province: province });
+                        }
+                        for (const municipality of allData.provinces[province].districts[district].municipalities) {
+                            if (municipality.toLowerCase().includes(query)) {
+                                results.push({ type: 'municipality', name: municipality, district: district, province: province });
+                            }
+                        }
+                    }
+                }
+            }
+
+            displayAutocompleteResults(results);
+        });
+
+        function displayAutocompleteResults(results) {
+            autocompleteResults.innerHTML = '';
+            results.slice(0, 5).forEach(result => {
+                const div = document.createElement('div');
+                div.classList.add('autocomplete-item');
+                div.textContent = `${result.name} (${result.type})`;
+                div.addEventListener('click', function() {
+                    searchInput.value = result.name;
+                    autocompleteResults.innerHTML = '';
+                });
+                autocompleteResults.appendChild(div);
+            });
+        }
+
+        function showMunicipalities(select, province) {
+            const districtId = select.value.replace(' ', '_');
+            const municipalityLists = document.querySelectorAll('.municipality-list');
+            municipalityLists.forEach(list => list.style.display = 'none');
+            if (districtId) {
+                document.getElementById(`${province.replace(' ', '_')}_${districtId}`).style.display = 'block';
+            }
+        }
+    </script>
+
+    <style>
+        .search-container {
+            margin-bottom: 30px;
+        }
+        .search-form {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .search-input-group {
+            flex-grow: 1;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #003893;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+        .search-button {
+            padding: 10px 20px 10px 30px;
+            font-size: 16px;
+            background-color: #003893;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .search-button:hover {
+            background-color: #002d7a;
+        }
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            z-index: 1000;
+        }
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
+        .search-results-header {
+            margin-top: 30px;
+            color: #333;
+            font-size: 1.5em;
+        }
+        .search-results {
+            padding: 0;
+        }
+        .province-result {
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .province-name {
+            color: #c41e3a;
+            margin-top: 0;
+        }
+        .district-select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #003893;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .municipality-list {
+            margin-top: 10px;
+        }
+        .municipality-list h4 {
+            color: #003893;
+        }
+        .municipality-list ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .municipality-list li {
+            padding: 5px 0;
+        }
+        .no-results {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .result-item {
+            background-color: white;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .result-name {
+            color: #c41e3a;
+            margin-top: 0;
+        }
+        /* ... (keep the rest of the existing styles) ... */
+    </style>
+{% endblock %}

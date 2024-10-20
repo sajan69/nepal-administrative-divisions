@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ province|title }} - Districts{% endblock %}
+
+{% block header %}Districts in {{ province|title }}{% endblock %}
+
+{% block content %}
+    <ul>
+        {% for district in districts %}
+            <li><a href="{{ url_for('district_page', province=province, district=district) }}">{{ district|title }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('home') }}" class="back-link">Back to Provinces</a>
+{% endblock %}
