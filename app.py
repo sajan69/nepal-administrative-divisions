@@ -2,15 +2,16 @@
 from flask import Flask, jsonify, render_template, request
 from flask_restx import Api, Resource, fields
 import json
+from decouple import config
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Nepal Administrative Divisions API',
     description='A simple API for Nepal\'s administrative divisions',
     doc='/docs', prefix='/api')
 
-# Load the combined data
-with open('combined_data.json', 'r', encoding='utf-8') as file:
-    combined_data = json.load(file)
+
+# Load the combined data from environment variable
+combined_data = json.loads(config('NEPAL_ADMIN_DATA'))
 
 # Define namespaces
 ns_provinces = api.namespace('provinces', description='Province operations')

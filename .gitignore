@@ -45,3 +45,6 @@ build/
 *.swp
 *~
 .vercel
+# Combined data file
+combined_data.json
+
