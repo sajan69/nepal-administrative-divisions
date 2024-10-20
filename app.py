@@ -156,7 +156,11 @@ def province_page(province_id):
 def district_page(province_id, district_id):
     province = next((p for p in combined_data if p['id'] == province_id), None)
     if province:
-        district = next((d for d in province['districts'].values() if d['id'] == district_id), None)
+        districts = province['districts']
+        if isinstance(districts, dict):
+            district = districts.get(str(district_id))
+        else:
+            district = next((d for d in districts if d['id'] == district_id), None)
         if district:
             return render_template('district.html', province=province, district=district)
     return "District not found", 404

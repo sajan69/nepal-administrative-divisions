@@ -10,9 +10,9 @@
         <p><strong>Website:</strong> <a href="{{ district.website }}" target="_blank">{{ district.website }}</a></p>
         <p><strong>Headquarter:</strong> {{ district.headquarter }}</p>
     </div>
-    <h2>Municipalities</h2>
     <ul class="municipality-list">
-        {% for municipality in district.municipalities.values() %}
+        {% set municipalities = district.municipalities.values() if district.municipalities is mapping else district.municipalities %}
+        {% for municipality in municipalities %}
             <li>
                 <div class="municipality-header" onclick="toggleDetails({{ loop.index }})">
                     <span class="municipality-name">{{ municipality.name }}</span>
