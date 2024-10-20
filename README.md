@@ -99,7 +99,9 @@ Contributions to this project are welcome! Please fork the repository and submit
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Acknowledgments
 
+- Data sourced from [Nepal Address API](https://github.com/bimalstha23/Nepal-Address-API/)
 
 ## Contact
 
