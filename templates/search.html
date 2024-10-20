@@ -23,35 +23,81 @@
         <div class="search-results">
             {% for name, data in results.items() %}
                 <div class="result-item">
-                    <h3 class="result-name">{{ name|title }}</h3>
+                    <h3 class="result-name">{{ name }}</h3>
                     {% if data.type == 'province' %}
                         <p>Province with {{ data.district_count }} districts</p>
-                        <select class="district-select" onchange="showMunicipalities(this, '{{ name }}')">
-                            <option value="">Select a district</option>
+                        <p><strong>Area:</strong> {{ data.area_sq_km }} sq km</p>
+                        <p><strong>Website:</strong> <a href="{{ data.website }}" target="_blank">{{ data.website }}</a></p>
+                        <p><strong>Headquarter:</strong> {{ data.headquarter }}</p>
+                        <div class="district-list">
+                            <h4>Districts in {{ name }} : {{ data.district_count }}</h4>
+                            <select id="district-select-{{ name|replace(' ', '_') }}" class="district-select" onchange="showDistrictDetails(this, '{{ name|replace(' ', '_') }}')">
+                                <option value="">Select a district</option>
+                                {% for district in data.districts %}
+                                    <option value="{{ district.name|replace(' ', '_') }}">{{ district.name }}</option>
+                                {% endfor %}
+                            </select>
                             {% for district in data.districts %}
-                                <option value="{{ district }}">{{ district|title }}</option>
+                                <div id="district-details-{{ name|replace(' ', '_') }}-{{ district.name|replace(' ', '_') }}" class="district-details" style="display: none;">
+                                    <h5>{{ district.name }}</h5>
+                                    <p><strong>Area:</strong> {{ district.area_sq_km }} sq km</p>
+                                    <p><strong>Website:</strong> <a href="{{ district.website }}" target="_blank">{{ district.website }}</a></p>
+                                    <p><strong>Headquarter:</strong> {{ district.headquarter }}</p>
+                                    <p><strong>Municipalities:</strong> {{ district.municipalities|length }}</p>
+                                    <ul class="municipality-list">
+                                        {% if district.municipalities is mapping %}
+                                            {% for municipality in district.municipalities.values() %}
+                                                <li>
+                                                    {{ municipality.name }}
+                                                    <span class="municipality-info">
+                                                        (Area: {{ municipality.area_sq_km }} sq km, 
+                                                        Wards: {{ municipality.wards|length }})
+                                                    </span>
+                                                </li>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for municipality in district.municipalities %}
+                                                <li>
+                                                    {{ municipality.name }}
+                                                    <span class="municipality-info">
+                                                        (Area: {{ municipality.area_sq_km }} sq km, 
+                                                        Wards: {{ municipality.wards|length }})
+                                                    </span>
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
                             {% endfor %}
-                        </select>
-                        {% for district, district_data in data.districts.items() %}
-                            <div class="municipality-list" id="{{ name|replace(' ', '_') }}_{{ district|replace(' ', '_') }}" style="display: none;">
-                                <h4>Municipalities in {{ district|title }}</h4>
-                                <ul>
-                                    {% for municipality in district_data.municipalities %}
-                                        <li>{{ municipality|title }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endfor %}
+                        </div>
                     {% elif data.type == 'district' %}
-                        <p>District in {{ data.province|title }} province</p>
-                        <p>Contains {{ data.municipality_count }} municipalities:</p>
-                        <ul>
+                        <p>District in {{ data.province }} province</p>
+                        <p><strong>Area:</strong> {{ data.area_sq_km }} sq km</p>
+                        <p><strong>Website:</strong> <a href="{{ data.website }}" target="_blank">{{ data.website }}</a></p>
+                        <p><strong>Headquarter:</strong> {{ data.headquarter }}</p>
+                        <p>Contains {{ data.municipality_count }} municipalities</p>
+                        <div class="municipality-list">
+                            <h4>Municipalities in {{ name }}</h4>
+                            <select id="municipality-select-{{ name|replace(' ', '_') }}" class="municipality-select" onchange="showMunicipalityDetails(this, '{{ name|replace(' ', '_') }}')">
+                                <option value="">Select a municipality</option>
+                                {% for municipality in data.municipalities %}
+                                    <option value="{{ municipality.name|replace(' ', '_') }}">{{ municipality.name }}</option>
+                                {% endfor %}
+                            </select>
                             {% for municipality in data.municipalities %}
-                                <li>{{ municipality|title }}</li>
+                                <div id="municipality-details-{{ name|replace(' ', '_') }}-{{ municipality.name|replace(' ', '_') }}" class="municipality-details" style="display: none;">
+                                    <h5>{{ municipality.name }}</h5>
+                                    <p><strong>Area:</strong> {{ municipality.area_sq_km }} sq km</p>
+                                    <p><strong>Website:</strong> <a href="{{ municipality.website }}" target="_blank">{{ municipality.website }}</a></p>
+                                    <p><strong>Wards:</strong> {{ municipality.wards|join(', ') }}</p>
+                                </div>
                             {% endfor %}
-                        </ul>
+                        </div>
                     {% elif data.type == 'municipality' %}
-                        <p>Municipality in {{ data.district|title }} district, {{ data.province|title }} province</p>
+                        <p>Municipality in {{ data.district }} district, {{ data.province }} province</p>
+                        <p><strong>Area:</strong> {{ data.area_sq_km }} sq km</p>
+                        <p><strong>Website:</strong> <a href="{{ data.website }}" target="_blank">{{ data.website }}</a></p>
+                        <p><strong>Wards:</strong> {{ data.wards|join(', ') }}</p>
                     {% endif %}
                 </div>
             {% endfor %}
@@ -63,24 +109,26 @@
     <script>
         const searchInput = document.getElementById('search-input');
         const autocompleteResults = document.getElementById('autocomplete-results');
-        const allData = {{ all_data|tojson|safe }};
+        const combinedData = {{ combined_data|tojson|safe }};
 
         searchInput.addEventListener('input', function() {
             const query = this.value.toLowerCase();
             const results = [];
 
             if (query.length > 1) {
-                for (const province in allData.provinces) {
-                    if (province.toLowerCase().includes(query)) {
-                        results.push({ type: 'province', name: province });
+                for (const province of combinedData) {
+                    if (province.name.toLowerCase().includes(query)) {
+                        results.push({ type: 'province', name: province.name });
                     }
-                    for (const district in allData.provinces[province].districts) {
-                        if (district.toLowerCase().includes(query)) {
-                            results.push({ type: 'district', name: district, province: province });
+                    const districts = province.districts instanceof Array ? province.districts : Object.values(province.districts);
+                    for (const district of districts) {
+                        if (district.name.toLowerCase().includes(query)) {
+                            results.push({ type: 'district', name: district.name, province: province.name });
                         }
-                        for (const municipality of allData.provinces[province].districts[district].municipalities) {
-                            if (municipality.toLowerCase().includes(query)) {
-                                results.push({ type: 'municipality', name: municipality, district: district, province: province });
+                        const municipalities = district.municipalities instanceof Array ? district.municipalities : Object.values(district.municipalities);
+                        for (const municipality of municipalities) {
+                            if (municipality.name.toLowerCase().includes(query)) {
+                                results.push({ type: 'municipality', name: municipality.name, district: district.name, province: province.name });
                             }
                         }
                     }
@@ -103,17 +151,33 @@
                 autocompleteResults.appendChild(div);
             });
         }
-
-        function showMunicipalities(select, province) {
-            const districtId = select.value.replace(' ', '_');
-            const municipalityLists = document.querySelectorAll('.municipality-list');
-            municipalityLists.forEach(list => list.style.display = 'none');
-            if (districtId) {
-                document.getElementById(`${province.replace(' ', '_')}_${districtId}`).style.display = 'block';
+        function showDistrictDetails(selectElement, provinceName) {
+            const districtName = selectElement.value;
+            const districtDetails = document.querySelectorAll(`.district-details[id^="district-details-${provinceName}"]`);
+            districtDetails.forEach(detail => {
+                detail.style.display = 'none';
+            });
+            if (districtName) {
+                const selectedDistrict = document.getElementById(`district-details-${provinceName}-${districtName}`);
+                if (selectedDistrict) {
+                    selectedDistrict.style.display = 'block';
+                }
+            }
+        }
+        function showMunicipalityDetails(selectElement, districtName) {
+            const municipalityName = selectElement.value;
+            const municipalityDetails = document.querySelectorAll(`.municipality-details[id^="municipality-details-${districtName}"]`);
+            municipalityDetails.forEach(detail => {
+                detail.style.display = 'none';
+            });
+            if (municipalityName) {
+                const selectedMunicipality = document.getElementById(`municipality-details-${districtName}-${municipalityName}`);
+                if (selectedMunicipality) {
+                    selectedMunicipality.style.display = 'block';
+                }
             }
         }
     </script>
-
     <style>
         .search-container {
             margin-bottom: 30px;
@@ -192,6 +256,25 @@
             border-radius: 5px;
             font-size: 16px;
         }
+        .district-details {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .district-details h5 {
+            margin-top: 0;
+            color: #003893;
+        }
+        .municipality-select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #003893;
+            border-radius: 5px;
+            font-size: 16px;
+        }
         .municipality-list {
             margin-top: 10px;
         }
@@ -204,6 +287,24 @@
         }
         .municipality-list li {
             padding: 5px 0;
+        }
+        .municipality-list li span {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .municipality-list li span:last-child {
+            margin-left: 10px;
+        }
+        .municipality-details {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .municipality-details h5 {
+            margin-top: 0;
+            color: #003893;
         }
         .no-results {
             text-align: center;
@@ -222,6 +323,25 @@
             color: #c41e3a;
             margin-top: 0;
         }
+        .district-list, .municipality-list {
+            margin-top: 15px;
+        }
+        .district-list h4, .municipality-list h4 {
+            color: #003893;
+            margin-bottom: 10px;
+        }
+        .district-list ul, .municipality-list ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .district-list li, .municipality-list li {
+            margin-bottom: 5px;
+        }
+        .district-info, .municipality-info {
+            font-size: 0.9em;
+            color: #666;
+        }
         /* ... (keep the rest of the existing styles) ... */
     </style>
+    <!-- Keep the existing styles -->
 {% endblock %}

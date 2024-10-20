@@ -1,14 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}{{ province|title }} - Districts{% endblock %}
+{% block title %}{{ province.name }} - Districts{% endblock %}
 
-{% block header %}Districts in {{ province|title }}{% endblock %}
+{% block header %}Districts in {{ province.name }}{% endblock %}
 
 {% block content %}
+    <div class="province-info">
+        <p><strong>Area:</strong> {{ province.area_sq_km }} sq km</p>
+        <p><strong>Website:</strong> <a href="{{ province.website }}" target="_blank">{{ province.website }}</a></p>
+        <p><strong>Headquarter:</strong> {{ province.headquarter }}</p>
+    </div>
+    <h2>Districts</h2>
     <ul>
-        {% for district in districts %}
-            <li><a href="{{ url_for('district_page', province=province, district=district) }}">{{ district|title }}</a></li>
-        {% endfor %}
+        {% if province.districts is mapping %}
+            {% for district in province.districts.values() %}
+                <li><a href="{{ url_for('district_page', province_id=province.id, district_id=district.id) }}">{{ district.name }}</a></li>
+            {% endfor %}
+        {% else %}
+            {% for district in province.districts %}
+                <li><a href="{{ url_for('district_page', province_id=province.id, district_id=district.id) }}">{{ district.name }}</a></li>
+            {% endfor %}
+        {% endif %}
     </ul>
     <a href="{{ url_for('home') }}" class="back-link">Back to Provinces</a>
 {% endblock %}

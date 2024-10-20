@@ -1,15 +1,73 @@
 {% extends "base.html" %}
 
-{% block title %}{{ district|title }} - Municipalities{% endblock %}
+{% block title %}{{ district.name }} - Municipalities{% endblock %}
 
-{% block header %}Municipalities in {{ district|title }}, {{ province|title }}{% endblock %}
+{% block header %}Municipalities in {{ district.name }}, {{ province.name }}{% endblock %}
 
 {% block content %}
-    <ul>
-        {% for municipality in municipalities %}
-            <li>{{ municipality|title }}</li>
+    <div class="district-info">
+        <p><strong>Area:</strong> {{ district.area_sq_km }} sq km</p>
+        <p><strong>Website:</strong> <a href="{{ district.website }}" target="_blank">{{ district.website }}</a></p>
+        <p><strong>Headquarter:</strong> {{ district.headquarter }}</p>
+    </div>
+    <h2>Municipalities</h2>
+    <ul class="municipality-list">
+        {% for municipality in district.municipalities.values() %}
+            <li>
+                <div class="municipality-header" onclick="toggleDetails({{ loop.index }})">
+                    <span class="municipality-name">{{ municipality.name }}</span>
+                    <span class="municipality-summary">
+                        (Area: {{ municipality.area_sq_km }} sq km, Wards: {{ municipality.wards|length }})
+                    </span>
+                </div>
+                <div id="municipality-details-{{ loop.index }}" class="municipality-details" style="display: none;">
+                    <p><strong>Category:</strong> {{ municipality.category_id }}</p>
+                    <p><strong>Website:</strong> <a href="{{ municipality.website }}" target="_blank">{{ municipality.website }}</a></p>
+                    <p><strong>Wards:</strong> {{ municipality.wards|join(', ') }}</p>
+                </div>
+            </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('province_page', province=province) }}" class="back-link">Back to {{ province|title }}</a>
+    <a href="{{ url_for('province_page', province_id=province.id) }}" class="back-link">Back to {{ province.name }}</a>
     <a href="{{ url_for('home') }}" class="back-link">Back to Provinces</a>
+
+    <script>
+        function toggleDetails(index) {
+            var details = document.getElementById('municipality-details-' + index);
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+            } else {
+                details.style.display = 'none';
+            }
+        }
+    </script>
+
+    <style>
+        .municipality-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .municipality-header {
+            cursor: pointer;
+            padding: 10px;
+           
+            margin-bottom: 5px;
+        }
+        .municipality-header:hover {
+            background-color: #e0e0e0;
+        }
+        .municipality-name {
+            font-weight: bold;
+        }
+        .municipality-summary {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .municipality-details {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+    </style>
 {% endblock %}

@@ -7,7 +7,7 @@
 {% block content %}
     <ul>
         {% for province in provinces %}
-            <li><a href="{{ url_for('province_page', province=province) }}">{{ province|title }}</a></li>
+            <li><a href="{{ url_for('province_page', province_id=province.id) }}">{{ province.name }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}

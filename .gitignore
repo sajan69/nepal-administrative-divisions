@@ -48,3 +48,4 @@ build/
 # Combined data file
 combined_data.json
 
+data/

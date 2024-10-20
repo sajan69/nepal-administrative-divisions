@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project provides a comprehensive web application and API for accessing and visualizing administrative divisions of Nepal. It includes information about provinces, districts, and municipalities, offering both a user-friendly web interface and a RESTful API for developers.
+This project provides a comprehensive web application and API for accessing and visualizing administrative divisions of Nepal. It includes detailed information about provinces, districts, and municipalities, offering both a user-friendly web interface and a RESTful API for developers.
 
 ## Features
 
@@ -11,6 +11,7 @@ This project provides a comprehensive web application and API for accessing and 
 - Search functionality for provinces, districts, and municipalities
 - RESTful API for programmatic access to the data
 - Swagger documentation for easy API exploration
+- Detailed information including area, website, and headquarters for each division
 
 ## Technologies Used
 
@@ -71,13 +72,31 @@ The API documentation is available at `/docs` when running the application. It p
 
 2. Get districts in a specific province:
    ```
-   GET /api/districts/?province=Bagmati
+   GET /api/districts/?province_id=3
+   ```
+   or
+   ```
+   GET /api/districts/?province_name=Bagmati
    ```
 
 3. Get municipalities in a specific district:
    ```
-   GET /api/municipalities/?province=Bagmati&district=Kathmandu
+   GET /api/municipalities/?province_id=3&district_id=27
    ```
+   or
+   ```
+   GET /api/municipalities/?province_name=Bagmati&district_name=Kathmandu
+   ```
+   
+## Data Structure Update
+
+The data structure has been updated to include more detailed information:
+
+- Provinces now include area, website, and headquarter information.
+- Districts include area, website, and headquarter information.
+- Municipalities include area, website, and ward information.
+
+This update provides a more comprehensive dataset for Nepal's administrative divisions.
 
 ## Web Application Usage
 

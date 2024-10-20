@@ -18,10 +18,9 @@
         <div class="chart-container full-width">
             <h3>Select a Province to see the number of municipalities per district</h3>
             <select id="provinceSelect">
-                
                 <option value="">Select a Province</option>
-                {% for province in province_data.keys() %}
-                    <option value="{{ province }}">{{ province }}</option>
+                {% for province in combined_data %}
+                    <option value="{{ province.name }}">{{ province.name }}</option>
                 {% endfor %}
             </select>
             <canvas id="districtMunicipalityChart"></canvas>
@@ -29,204 +28,208 @@
     </div>
 </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const provinceData = {{ province_data|tojson|safe }};
-        const allData = {{ all_data|tojson|safe }};
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const allData = {{ combined_data|tojson|safe }};
 
-        // Chart 1: Number of Districts per Province
-        const ctx1 = document.getElementById('provinceDistrictChart').getContext('2d');
-        new Chart(ctx1, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(provinceData),
-                datasets: [{
-                    label: 'Number of Districts',
-                    data: Object.values(provinceData),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
+    // Chart 1: Number of Districts per Province
+    const provinceDistrictData = allData.map(province => ({
+        name: province.name,
+        districtCount: Object.keys(province.districts).length
+    }));
+
+    const ctx1 = document.getElementById('provinceDistrictChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: provinceDistrictData.map(d => d.name),
+            datasets: [{
+                label: 'Number of Districts',
+                data: provinceDistrictData.map(d => d.districtCount),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Number of Districts per Province'
+                },
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
+            scales: {
+                y: {
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Number of Districts per Province'
-                    },
+                        text: 'Number of Districts'
+                    }
+                }
+            }
+        }
+    });
+
+    // Chart 2: Number of Municipalities per Province
+    const provinceMunicipalityData = allData.map(province => ({
+        name: province.name,
+        municipalityCount: Object.values(province.districts).reduce((sum, district) => sum + Object.keys(district.municipalities).length, 0)
+    }));
+
+    const ctx2 = document.getElementById('provinceMunicipalityChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: provinceMunicipalityData.map(d => d.name),
+            datasets: [{
+                data: provinceMunicipalityData.map(d => d.municipalityCount),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)'
+                ],
+                borderColor: 'white',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Number of Municipalities per Province'
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+
+    // Chart 3: Number of Municipalities per District (for selected Province)
+    const provinceSelect = document.getElementById('provinceSelect');
+    const ctx3 = document.getElementById('districtMunicipalityChart').getContext('2d');
+    let districtChart;
+
+    provinceSelect.addEventListener('change', function() {
+        const selectedProvince = this.value;
+        if (selectedProvince) {
+            const province = allData.find(p => p.name === selectedProvince);
+            const districtData = Object.values(province.districts).map(district => ({
+                name: district.name,
+                municipalityCount: Object.keys(district.municipalities).length
+            }));
+
+            if (districtChart) {
+                districtChart.destroy();
+            }
+
+            districtChart = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: districtData.map(d => d.name),
+                    datasets: [{
+                        label: 'Number of Municipalities',
+                        data: districtData.map(d => d.municipalityCount),
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
                         title: {
                             display: true,
-                            text: 'Number of Districts'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Chart 2: Number of Municipalities per Province
-        const provinceMunicipalityData = Object.entries(allData.provinces).map(([province, data]) => ({
-            province: province,
-            municipalityCount: Object.values(data.districts).reduce((sum, district) => sum + district.municipalities.length, 0)
-        }));
-
-        const ctx2 = document.getElementById('provinceMunicipalityChart').getContext('2d');
-        new Chart(ctx2, {
-            type: 'pie',
-            data: {
-                labels: provinceMunicipalityData.map(d => d.province),
-                datasets: [{
-                    data: provinceMunicipalityData.map(d => d.municipalityCount),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(153, 102, 255, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(199, 199, 199, 0.6)'
-                    ],
-                    borderColor: 'white',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Number of Municipalities per Province'
+                            text: `Number of Municipalities per District in ${selectedProvince}`
+                        },
                     },
-                    legend: {
-                        position: 'right',
-                    }
-                }
-            }
-        });
-
-        // Chart 3: Number of Municipalities per District (for selected Province)
-        const provinceSelect = document.getElementById('provinceSelect');
-        const ctx3 = document.getElementById('districtMunicipalityChart').getContext('2d');
-        let districtChart;
-
-        provinceSelect.addEventListener('change', function() {
-            const selectedProvince = this.value;
-            if (selectedProvince) {
-                const districtData = Object.entries(allData.provinces[selectedProvince].districts).map(([district, data]) => ({
-                    district: district,
-                    municipalityCount: data.municipalities.length
-                }));
-
-                if (districtChart) {
-                    districtChart.destroy();
-                }
-
-                districtChart = new Chart(ctx3, {
-                    type: 'bar',
-                    data: {
-                        labels: districtData.map(d => d.district),
-                        datasets: [{
-                            label: 'Number of Municipalities',
-                            data: districtData.map(d => d.municipalityCount),
-                            backgroundColor: 'rgba(153, 102, 255, 0.6)',
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 90,
+                                minRotation: 90
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
                             title: {
                                 display: true,
-                                text: `Number of Municipalities per District in ${selectedProvince}`
-                            },
-                        },
-                        
-                        scales: {
-                            x: {
-                                ticks: {
-                                    autoSkip: false,
-                                    maxRotation: 90,
-                                    minRotation: 90
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Number of Municipalities'
-                                }
+                                text: 'Number of Municipalities'
                             }
                         }
                     }
-                });
-            } else if (districtChart) {
-                districtChart.destroy();
-                districtChart = null;
-            }
-        });
-    </script>
+                }
+            });
+        } else if (districtChart) {
+            districtChart.destroy();
+            districtChart = null;
+        }
+    });
+</script>
 
-    <style>
+<!-- Keep the existing styles -->
+<style>
+    .chart-container-wrapper {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .chart-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    .chart-container {
+        width: 48%;
+        height: 400px;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-right: 2%;
+    }
+    .chart-container:last-child {
+        margin-right: 0;
+    }
+    .chart-container.full-width {
+        width: 100%;
+        height: 600px;
+        padding-bottom: 40px;
+    }
+    #provinceSelect {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
+    @media (max-width: 768px) {
         .chart-container-wrapper {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
         .chart-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
+            flex-direction: column;
         }
         .chart-container {
-            width: 48%;
-            height: 400px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-right: 2%; /* Add gap between containers */
-        }
-        .chart-container:last-child {
-            margin-right: 0; /* Remove margin from the last container */
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+            padding: 10px;
         }
         .chart-container.full-width {
-            width: 100%;
-            height: 600px; /* Increased from 500px */
-            padding-bottom: 40px; /* Added padding at the bottom */
-         
+            height: 500px;
         }
-        #provinceSelect {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-        @media (max-width: 768px) {
-            .chart-container-wrapper {
-                padding: 10px;
-            }
-            .chart-row {
-                flex-direction: column;
-            }
-            .chart-container {
-                width: 100%;
-                height: 300px;
-                margin-bottom: 20px;
-                padding: 10px;
-            }
-            .chart-container.full-width {
-                height: 500px; /* Increased from 400px for mobile */
-            }
-        }
-    </style>
+    }
+</style>
 {% endblock %}
