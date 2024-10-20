@@ -94,6 +94,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For any queries or suggestions, please contact:
 Sajan Adhikari
-- GitHub: [@sajanadhikari](https://github.com/sajanadhikari)
+- GitHub: [@sajanadhikari](https://github.com/sajan69)
 - LinkedIn: [Sajan Adhikari](https://www.linkedin.com/in/sajanadhikari)
 - Twitter: [@sajanadhikari_](https://twitter.com/sajanadhikari_)
