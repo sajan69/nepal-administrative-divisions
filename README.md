@@ -38,12 +38,19 @@ This project provides a comprehensive web application and API for accessing and 
    pip install -r requirements.txt
    ```
 
-4. Run the application:
+4. Set up environment variables:
+   - For local development, create a `.env` file in the project root and add:
+     ```
+     NEPAL_ADMIN_DATA='{"provinces": {...}}' # Your entire JSON data here
+     ```
+   - For Vercel deployment, add the `NEPAL_ADMIN_DATA` environment variable in your Vercel project settings with the entire JSON data as its value.
+
+5. Run the application:
    ```
    python app.py
    ```
 
-5. Open a web browser and navigate to `http://localhost:5000`
+6. Open a web browser and navigate to `http://localhost:5000`
 
 ## API Documentation
 
@@ -80,6 +87,10 @@ The API documentation is available at `/docs` when running the application. It p
 4. Search: Allows searching for any administrative division
 5. Visualize: Provides interactive charts of administrative data
 
+## Deployment
+
+This application is configured for deployment on Vercel. Ensure that you've set up the `NEPAL_ADMIN_DATA` environment variable in your Vercel project settings before deploying.
+
 ## Contributing
 
 Contributions to this project are welcome! Please fork the repository and submit a pull request with your changes.
@@ -94,6 +105,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For any queries or suggestions, please contact:
 Sajan Adhikari
-- GitHub: [@sajanadhikari](https://github.com/sajan69)
+- GitHub: [@sajan69](https://github.com/sajan69)
 - LinkedIn: [Sajan Adhikari](https://www.linkedin.com/in/sajanadhikari)
 - Twitter: [@sajanadhikari_](https://twitter.com/sajanadhikari_)
