@@ -12,8 +12,21 @@ api = Api(app, version='1.0', title='Nepal Administrative Divisions API',
 
 # Load the combined data from environment variable
 NEPAL_ADMIN_DATA_URL = config('NEPAL_ADMIN_DATA_URL')
+print(f"Fetching data from: {NEPAL_ADMIN_DATA_URL}")
 response = requests.get(NEPAL_ADMIN_DATA_URL)
-combined_data = response.json()
+
+# Print the status code and response text for debugging
+print(f"Status Code: {response.status_code}")
+print("Response Text:", response.text)  # Inspect the response
+
+if response.status_code == 200:
+    combined_data = response.json()
+else:
+    print(f"Error fetching data: {response.status_code} - {response.text}")
+    # Load data from local JSON file as a fallback
+    with open('data/updated_nepal_data.json', 'r', encoding='utf-8') as f:
+        combined_data = json.load(f)
+
 # Define namespaces
 ns_provinces = api.namespace('provinces', description='Province operations')
 ns_districts = api.namespace('districts', description='District operations')
