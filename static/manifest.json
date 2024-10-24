@@ -1,0 +1,21 @@
+{
+    "name": "Nepal Administrative Divisions API",
+    "short_name": "Nepal API",
+    "description": "A simple API for Nepal's administrative divisions",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4CAF50",
+    "icons": [
+        {
+            "src": "https://seeklogo.com/images/E/emblem-of-nepal-logo-D5A731713C-seeklogo.com.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://seeklogo.com/images/E/emblem-of-nepal-logo-D5A731713C-seeklogo.com.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
